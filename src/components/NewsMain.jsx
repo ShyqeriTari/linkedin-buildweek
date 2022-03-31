@@ -1,41 +1,62 @@
-import { Row, Col } from "react-bootstrap"
-import HomeSidebarLeft from "./HomeSidebarLeft"
-import PostPost from "./PostPost"
-import GetAPost from "./GetAPost"
-import LinkedNews from "./LinkedNews"
-import HomeFooter from "./HomeFooter"
-import { useState, useEffect } from "react"
+import { Row, Col } from "react-bootstrap";
+import HomeSidebarLeft from "./HomeSidebarLeft";
+import PostPost from "./PostPost";
+import SinglePost from "./SinglePost";
+import LinkedNews from "./LinkedNews";
+import HomeFooter from "./HomeFooter";
+import { useState, useEffect } from "react";
 
 const NewsMain = ({ changeImg }) => {
-  const [user, setUser] = useState({})
+  const [user, setUser] = useState({});
+  const [posts, setPosts] = useState(undefined);
+  const [again, setAgain] = useState(true);
 
-  const [fe, setFe] = useState(false)
+  const apiL2 = `${process.env.REACT_APP_LOCAL}/posts`;
 
+  const change = (value) => {
+    setPosts(value);
+  };
 
-  const changeFe = (value) => {
-    setFe(value)
-  }
+  const getFetch = async () => {
+    try {
+      let response = await fetch(apiL2);
+      let data = await response.json();
+      change(data);
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const apiL= `${process.env.REACT_APP_LOCAL}/profile/6241b5a05f0f9cae1d24811c`
+  useEffect(() => {
+    getFetch();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [again]);
+
+  // const [fe, setFe] = useState(false);
+
+  // const changeFe = (value) => {
+  //   setFe(value);
+  // };
+
+  const apiL = `${process.env.REACT_APP_LOCAL}/profile/6241b5a05f0f9cae1d24811c`;
 
   const fetchData = async () => {
     try {
-      const response = await fetch(
-        apiL
-      )
-      const data = await response.json()
-      changeImg(data.image)
-      setUser(data)
+      const response = await fetch(apiL);
+      const data = await response.json();
+      changeImg(data.image);
+      setUser(data);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
-
+  };
 
   useEffect(() => {
-    fetchData()
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!user])
+  }, [!user]);
 
   return (
     <div className="container padding-sec">
@@ -48,9 +69,37 @@ const NewsMain = ({ changeImg }) => {
             image={user.image}
             name={user.name}
             surname={user.surname}
-            refe={changeFe}
+            again={again}
+            setAgain={setAgain}
           />
-          <GetAPost refe={fe} />
+          <>
+            {posts === undefined && (
+              <div
+                className="spinner-border text-primary"
+                style={{ marginLeft: "47%" }}
+                role="status"
+              >
+                <span className="sr-only">Loading...</span>
+              </div>
+            )}
+            {posts &&
+              posts
+                .map((post) => (
+                  <SinglePost
+                    fetch={getFetch}
+                    username={post.profile.name + " " + post.profile.surname}
+                    image={post.image}
+                    text={post.text}
+                    key={post._id}
+                    unique={post._id}
+                    params={post.profile._id}
+                    userimg={post.profile.image}
+                    job={post.profile.title}
+                    date={post.createdAt}
+                  />
+                ))
+                .reverse()}
+          </>
         </Col>
         <Col md={4}>
           <LinkedNews title={"LinkedIn News"} />
@@ -58,7 +107,7 @@ const NewsMain = ({ changeImg }) => {
         </Col>
       </Row>
     </div>
-  )
-}
+  );
+};
 
-export default NewsMain
+export default NewsMain;
